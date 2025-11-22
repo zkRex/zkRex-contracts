@@ -5,7 +5,7 @@ import {Token} from "../src/token/Token.sol";
 import {Script} from "forge-std/Script.sol";
 
 
-contract ZKRexScript is Script {
+contract DeployToken is Script {
     Token public token;
 
     function setUp() public {}
