@@ -10,6 +10,7 @@ import {ITREXImplementationAuthority} from "../src/proxy/authority/ITREXImplemen
 import {IdentityRegistryStorage} from "../src/registry/implementation/IdentityRegistryStorage.sol";
 import {IdentityRegistry} from "../src/registry/implementation/IdentityRegistry.sol";
 import {ModularCompliance} from "../src/compliance/modular/ModularCompliance.sol";
+import {ZkTLSComplianceModule} from "../src/compliance/modular/modules/ZkTLSComplianceModule.sol";
 
 // Import Authority
 import {Script} from "forge-std/Script.sol";
@@ -85,6 +86,15 @@ contract DeployAuthority is Script {
         // 6. Deploy IAFactory with the TREXFactory and link it back to the IA
         IAFactory iaFactory = new IAFactory(address(factory));
         authority.setIAFactory(address(iaFactory));
+
+        // 7. Deploy the custom compliance module (zkTLS) and set its initial verifier
+        // This module can be added to any ModularCompliance instance when deploying a token via TREXFactory
+        // Example: pass address(zktlsModule) in TokenDetails.complianceModules and use setVerifier/callModuleFunction as needed
+        ZkTLSComplianceModule zktlsModule = new ZkTLSComplianceModule(msg.sender);
+        // Optionally, you can later grant another verifier EOA/contract the right to update proofs:
+        // zktlsModule.setVerifier(<verifierAddress>);
+
+
 
         vm.stopBroadcast();
     }
