@@ -11,6 +11,7 @@ import {IdentityRegistryStorage} from "../src/registry/implementation/IdentityRe
 import {IdentityRegistry} from "../src/registry/implementation/IdentityRegistry.sol";
 import {ModularCompliance} from "../src/compliance/modular/ModularCompliance.sol";
 import {ZkTLSComplianceModule} from "../src/compliance/modular/modules/ZkTLSComplianceModule.sol";
+import {IClaimIssuer} from "@onchain-id/solidity/contracts/interface/IClaimIssuer.sol";
 
 // Import Authority
 import {Script} from "forge-std/Script.sol";
@@ -94,8 +95,16 @@ contract DeployAuthority is Script {
         // Optionally, you can later grant another verifier EOA/contract the right to update proofs:
         // zktlsModule.setVerifier(<verifierAddress>);
 
+        // 8. Register a claim topic and a custom issuer (deployer) with that topic
+        // Note: This interacts with the implementation contracts directly; actual
+        // registry data is stored in proxies deployed per token via TREXFactory.
+        // This step is illustrative for local testing; production flows should
+        // add topics/issuers on the deployed proxy instances.
+        claimTopicsImpl.addClaimTopic(100);
+        uint256[] memory topics = new uint256[](1);
+        topics[0] = 100;
+        trustedIssuersImpl.addTrustedIssuer(IClaimIssuer(msg.sender), topics);
 
-
-        vm.stopBroadcast();
+    vm.stopBroadcast();
     }
 }
