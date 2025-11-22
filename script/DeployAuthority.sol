@@ -20,6 +20,10 @@ import {TREXImplementationAuthority} from "../src/proxy/authority/TREXImplementa
 import {IAFactory} from "../src/proxy/authority/IAFactory.sol";
 import {Token} from "../src/token/Token.sol";
 import {TrustedIssuersRegistry} from "../src/registry/implementation/TrustedIssuersRegistry.sol";
+import {ClaimTopicsRegistryProxy} from "../src/proxy/ClaimTopicsRegistryProxy.sol";
+import {TrustedIssuersRegistryProxy} from "../src/proxy/TrustedIssuersRegistryProxy.sol";
+import {IClaimTopicsRegistry} from "../src/registry/interface/IClaimTopicsRegistry.sol";
+import {ITrustedIssuersRegistry} from "../src/registry/interface/ITrustedIssuersRegistry.sol";
 
 // OnchainID (Identity) factory stack
 import {IdFactory} from "@onchain-id/solidity/contracts/factory/IdFactory.sol";
@@ -95,15 +99,20 @@ contract DeployAuthority is Script {
         // Optionally, you can later grant another verifier EOA/contract the right to update proofs:
         // zktlsModule.setVerifier(<verifierAddress>);
 
-        // 8. Register a claim topic and a custom issuer (deployer) with that topic
-        // Note: This interacts with the implementation contracts directly; actual
-        // registry data is stored in proxies deployed per token via TREXFactory.
-        // This step is illustrative for local testing; production flows should
-        // add topics/issuers on the deployed proxy instances.
-        claimTopicsImpl.addClaimTopic(100);
+        // 8. Register a claim topic and a custom issuer (deployer) WITH THE PROXIES (not the implementations)
+        // Deploy standalone registry proxies wired to the same ImplementationAuthority
+        ClaimTopicsRegistryProxy ctrProxy = new ClaimTopicsRegistryProxy(address(authority));
+        TrustedIssuersRegistryProxy tirProxy = new TrustedIssuersRegistryProxy(address(authority));
+
+        // Interact with the registries through their proxies using the interfaces
+        IClaimTopicsRegistry ctr = IClaimTopicsRegistry(address(ctrProxy));
+        ITrustedIssuersRegistry tir = ITrustedIssuersRegistry(address(tirProxy));
+
+        // Add a sample claim topic and register the deployer as a trusted issuer for that topic
+        ctr.addClaimTopic(100);
         uint256[] memory topics = new uint256[](1);
         topics[0] = 100;
-        trustedIssuersImpl.addTrustedIssuer(IClaimIssuer(msg.sender), topics);
+        tir.addTrustedIssuer(IClaimIssuer(msg.sender), topics);
 
     vm.stopBroadcast();
     }
